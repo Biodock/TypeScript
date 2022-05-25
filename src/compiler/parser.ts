@@ -6399,6 +6399,8 @@ namespace ts {
                   return parseFunctionDeclaration(getNodePos(), hasPrecedingJSDocComment(), /*decorators*/ undefined, /*modifiers*/ undefined);
               case SyntaxKind.ClassKeyword:
                   return parseClassDeclaration(getNodePos(), hasPrecedingJSDocComment(), /*decorators*/ undefined, /*modifiers*/ undefined);
+              case SyntaxKind.ConcurrentKeyword:
+                  return parseConcurrentStatement(Diagnostics.Unexpected_token_expected);
               case SyntaxKind.IfKeyword:
                   return parseIfStatement();
               case SyntaxKind.DoKeyword:
