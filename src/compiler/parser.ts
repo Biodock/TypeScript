@@ -264,6 +264,14 @@ namespace ts {
                   visitNode(cbNode, (node as YieldExpression).expression);
           case SyntaxKind.AwaitExpression:
               return visitNode(cbNode, (node as AwaitExpression).expression);
+          case SyntaxKind.ConcurrentBlock:
+              return visitNodes(
+                  cbNode,
+                  cbNodes,
+                  (node as ConcurrentBlock).statements
+              );
+          case SyntaxKind.ConcurrentStatement:
+              return visitNode(cbNode, (node as ConcurrentStatement).body);
           case SyntaxKind.PostfixUnaryExpression:
               return visitNode(cbNode, (node as PostfixUnaryExpression).operand);
           case SyntaxKind.BinaryExpression:
