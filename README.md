@@ -15,6 +15,18 @@ to test, run:
 
 and compare the generated files with `customized-syntax.ts`.
 
+to install into the biodock web repo:
+
+- run `gulp LKG` in this repo
+- create a new package called typescript
+- copy the `lib` and `bin` directories from this repo over
+- create a package.json with the name `typescript` and the correct version number
+
+problems
+
+- typescript isn't viewing functions on the inside of `concurrent` blocks as "used".
+- typescript-eslint and babel have their own parsers and thus this syntax would break their code. alas.
+
 # TypeScript
 
 [![GitHub Actions CI](https://github.com/microsoft/TypeScript/workflows/CI/badge.svg)](https://github.com/microsoft/TypeScript/actions?query=workflow%3ACI)
