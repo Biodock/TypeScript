@@ -2,7 +2,7 @@
     "name": "typescript",
     "author": "Microsoft Corp.",
     "homepage": "https://www.typescriptlang.org/",
-    "version": "4.4.4",
+    "version": "4.4.4-biodock-custom",
     "license": "Apache-2.0",
     "description": "TypeScript is a language for application scale JavaScript development",
     "keywords": [
@@ -115,7 +115,10 @@
         "lint:ci": "gulp lint --ci",
         "lint:compiler": "gulp lint-compiler",
         "lint:scripts": "gulp lint-scripts",
-        "setup-hooks": "node scripts/link-hooks.js"
+        "setup-hooks": "node scripts/link-hooks.js",
+        "biodock-test": "npm run biodock-test-esnext && npm run biodock-test-es5",
+        "biodock-test-esnext": "node built/local/tsc.js tests/biodock-custom/customized-syntax.ts --outDir tests/biodock-custom/compiled-esnext --target esnext --moduleResolution node",
+        "biodock-test-es5": "node built/local/tsc.js tests/biodock-custom/customized-syntax.ts --outDir tests/biodock-custom/compiled-es5 --target es5 --moduleResolution node"
     },
     "browser": {
         "fs": false,

@@ -264,6 +264,14 @@ namespace ts {
                     visitNode(cbNode, (node as YieldExpression).expression);
             case SyntaxKind.AwaitExpression:
                 return visitNode(cbNode, (node as AwaitExpression).expression);
+            case SyntaxKind.ConcurrentBlock:
+                return visitNodes(
+                    cbNode,
+                    cbNodes,
+                    (node as ConcurrentBlock).statements
+                );
+            case SyntaxKind.ConcurrentStatement:
+                return visitNode(cbNode, (node as ConcurrentStatement).body);
             case SyntaxKind.PostfixUnaryExpression:
                 return visitNode(cbNode, (node as PostfixUnaryExpression).operand);
             case SyntaxKind.BinaryExpression:
@@ -5857,6 +5865,101 @@ namespace ts {
             return withJSDoc(finishNode(factory.createEmptyStatement(), pos), hasJSDoc);
         }
 
+        function parseConcurrentBlock(
+            diagnosticMessage?: DiagnosticMessage
+        ): ConcurrentBlock {
+            const pos = getNodePos();
+            const openBracePosition = scanner.getTokenPos();
+            if (parseExpected(SyntaxKind.OpenBraceToken, diagnosticMessage)) {
+                const multiLine = scanner.hasPrecedingLineBreak();
+                const statements = parseList(
+                    ParsingContext.BlockStatements,
+                    parseStatement
+                );
+  
+                const isEveryStatementAValidConcurrentBlockStatement =
+                    statements.every((statement) =>
+                        isValidConcurrentBlockStatement(statement)
+                    );
+                if (!isEveryStatementAValidConcurrentBlockStatement) {
+                    // raise error
+                    const lastError = lastOrUndefined(parseDiagnostics);
+                    if (
+                        lastError &&
+                        lastError.code === Diagnostics._0_expected.code
+                    ) {
+                        addRelatedInfo(
+                            lastError,
+                            createDetachedDiagnostic(
+                                fileName,
+                                pos,
+                                1,
+                                Diagnostics.The_parser_expected_to_find_a_to_match_the_token_here
+                            )
+                        );
+                    }
+                }
+  
+                if (!parseExpected(SyntaxKind.CloseBraceToken)) {
+                    const lastError = lastOrUndefined(parseDiagnostics);
+                    if (
+                        lastError &&
+                        lastError.code === Diagnostics._0_expected.code
+                    ) {
+                        addRelatedInfo(
+                            lastError,
+                            createDetachedDiagnostic(
+                                fileName,
+                                openBracePosition,
+                                1,
+                                Diagnostics.The_parser_expected_to_find_a_to_match_the_token_here
+                            )
+                        );
+                    }
+                }
+                const result = finishNode(
+                    factory.createConcurrentBlock(
+                        statements as unknown as ValidConcurrentBlockStatement[],
+                        multiLine
+                    ),
+                    pos
+                );
+                if (token() === SyntaxKind.EqualsToken) {
+                    parseErrorAtCurrentToken(
+                        Diagnostics.Declaration_or_statement_expected_This_follows_a_block_of_statements_so_if_you_intended_to_write_a_destructuring_assignment_you_might_need_to_wrap_the_the_whole_assignment_in_parentheses
+                    );
+                    nextToken();
+                }
+  
+                return result;
+            } else {
+                const statements =
+                    createMissingList<ValidConcurrentBlockStatement>();
+                return finishNode(
+                    factory.createConcurrentBlock(
+                        statements,
+                        /*multiLine*/ undefined
+                    ),
+                    pos
+                );
+            }
+        }
+  
+        function parseConcurrentStatement(
+            diagnosticMessage?: DiagnosticMessage
+        ): ConcurrentStatement {
+            const pos = getNodePos();
+            const hasJSDoc = hasPrecedingJSDocComment();
+  
+            parseExpected(SyntaxKind.ConcurrentKeyword);
+            const body = parseConcurrentBlock(diagnosticMessage);
+  
+            return withJSDoc(
+                finishNode(factory.createConcurrentStatement(body), pos),
+                hasJSDoc
+            );
+        }  
+
         function parseIfStatement(): IfStatement {
             const pos = getNodePos();
             const hasJSDoc = hasPrecedingJSDocComment();
@@ -6304,6 +6407,8 @@ namespace ts {
                     return parseFunctionDeclaration(getNodePos(), hasPrecedingJSDocComment(), /*decorators*/ undefined, /*modifiers*/ undefined);
                 case SyntaxKind.ClassKeyword:
                     return parseClassDeclaration(getNodePos(), hasPrecedingJSDocComment(), /*decorators*/ undefined, /*modifiers*/ undefined);
+                case SyntaxKind.ConcurrentKeyword:
+                    return parseConcurrentStatement(Diagnostics.Unexpected_token_expected);
                 case SyntaxKind.IfKeyword:
                     return parseIfStatement();
                 case SyntaxKind.DoKeyword:
